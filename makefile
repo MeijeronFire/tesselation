@@ -5,6 +5,16 @@
 # compile:
 # 	gcc tesselation.c -lpthread -lm -Wall -o run
 
-all: 
-	gcc fast_tesselation.c -O3 -lpthread -lm -Wall -Wpedantic -o run
-	./run
+all: fast_tesselation.o tpool.o
+	gcc -o tes fast_tesselation.o tpool.o
+fast_tesselation.o:
+	gcc -c fast_tesselation.c
+tpool.o:
+	gcc -c tpool.c
+clean:
+	rm -f run tes
+	rm -f *.ppm
+	rm -f *.png
+	rm -f *.gif
+	rm -f *.txt
+	rm -f *.o

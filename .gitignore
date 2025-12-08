@@ -1,8 +1,7 @@
-*.gif
+run 
+tes
 *.ppm
 *.png
-*.o
+*.gif
 *.txt
-tesselation
-run
-main
+*.o
