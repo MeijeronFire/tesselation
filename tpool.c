@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include "tpool.h"
+#include "defs.h"
 
 // creates a work object
 static tpool_work *tpool_work_create(thread_func func, void *arg)

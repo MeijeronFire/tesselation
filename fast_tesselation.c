@@ -1,45 +1,54 @@
 // SPDX-License-Identifier: GPL
 #include <stdlib.h>
+#include <time.h>
 #include <stdio.h>
-#include <unistd.h>
-#include "tpool.h"
+#include <pthread.h>
+#include "fast_tesselation.h"
+#include "defs.h"
 
-static const size_t num_threads = 4;
-static const size_t num_items   = 100;
-
-void worker(void *arg)
+int randMax(int max)
 {
-	int *val = arg;
-	int  old = *val;
-
-	*val += 1000;
-	printf("tid=%p, old=%d, val=%d\n", pthread_self(), old, *val);
-
-	if (*val%2)
-		usleep(100000);
+	return rand() % (max + 1);
 }
 
-int main(int argc, char **argv)
+sites *initialiseSites(void)
 {
-	tpool *tm;
-	int     *vals;
-	size_t   i;
+	// initilise the random function
+	srand(time(NULL));
 
-	tm   = tpool_create(num_threads);
-	vals = calloc(num_items, sizeof(*vals));
+	static sites mutableInternal[SITEAMOUNT];
 
-	for (i=0; i<num_items; i++) {
-		vals[i] = i;
-		tpool_add_work(tm, worker, vals+i);
+	for (int i = 0; i < SITEAMOUNT; i++) {
+		mutableInternal[i].x = randMax(WIDTH);
+		mutableInternal[i].y = randMax(HEIGHT);
 	}
+	return mutableInternal;
+}
+static pthread_once_t once = PTHREAD_ONCE_INIT;
+static sites *externalSites;
 
-	tpool_wait(tm);
+void init_wrapper(void)
+{
+	externalSites = initialiseSites();
+}
 
-	for (i=0; i<num_items; i++) {
-		printf("%d\n", vals[i]);
-	}
+const sites *getSites(void)
+{
+	pthread_once(&once, init_wrapper);
+	return externalSites;
+}
 
-	free(vals);
-	tpool_destroy(tm);
-	return 0;
+sites closest(unsigned int x, unsigned int y)
+{
+
+}
+
+// alr for this function we just gotta go and generate one tesselation
+void worker(void *arg)
+{
+	const sites *Sites;
+
+	Sites = getSites();
+	for (int i = 0; i < SITEAMOUNT; i++)
+		printf("%d, %d\n", Sites[i].x, Sites[i].y);
 }
