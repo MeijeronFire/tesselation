@@ -10,6 +10,9 @@ extern const size_t num_items;
 extern const int WIDTH;
 extern const int HEIGHT;
 
-#define SITEAMOUNT 5
+extern const unsigned char COLORS[20][3];
+
+#define SITEAMOUNT 60
+#define COLORAMOUNT 20
 
 #endif

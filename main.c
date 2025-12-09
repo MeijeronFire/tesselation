@@ -9,16 +9,26 @@
 int main(void)
 {
 	tpool *tm;
+	struct argument {
+		float power;
+		int name;
+	} *vals;
 	size_t   i;
 
 	// getSites(); // ignore output, just make threadsafe
 	tm   = tpool_create(num_threads);
+	vals = calloc(num_items, sizeof(*vals));
 
-	for (i = 0; i < num_items; i++)
-		tpool_add_work(tm, worker, NULL);
+	for (i = 0; i < num_items; i++) {
+		vals[i].name = i;
+		vals[i].power = 1.0 + i * (1.0 / (num_items - 1));
+		printf("%d, %.6f\n", vals[i].name, vals[i].power);
+		tpool_add_work(tm, worker, vals+i);
+	}
 
 	tpool_wait(tm);
 
+	free(vals);
 	tpool_destroy(tm);
 	return 0;
 }
