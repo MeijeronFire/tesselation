@@ -4,11 +4,11 @@
 
 #include <stddef.h>
 
-extern const size_t num_threads;
-extern const size_t num_items;
+#define num_threads 8
+#define num_items 40
 
-extern const int WIDTH;
-extern const int HEIGHT;
+#define WIDTH 1000
+#define HEIGHT 1000
 
 extern const unsigned char COLORS[20][3];
 

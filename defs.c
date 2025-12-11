@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: GPL
 #include "defs.h"
 
-const size_t num_threads = 4;
-const size_t num_items   = 3;
-
-const int WIDTH  = 1000;
-const int HEIGHT = 1000;
-
 const unsigned char COLORS[COLORAMOUNT][3] = {
 	{255,   0,   0}, // Red
 	{  0, 255,   0}, // Green
