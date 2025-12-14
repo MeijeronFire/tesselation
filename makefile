@@ -1,16 +1,38 @@
-# all: compile
-# 	./run 50 1 500 500
-# 	mogrify -format png *.ppm
-buildopts = -O3 -Wall -Wextra -lpthread -pthread -lm
+CC      = gcc
+NVCC    = nvcc
+
+SRC_DIR = src
+INC_DIR = include
+OBJ_DIR = build
+
+CFLAGS  = -O3 -Wall -Wextra -I$(INC_DIR)
+NVFLAGS = -O3 -I$(INC_DIR)
+
+LDLIBS  = -lpthread -pthread -lm
+
+OBJS = \
+	$(OBJ_DIR)/main.o \
+	$(OBJ_DIR)/fast_tesselation.o \
+	$(OBJ_DIR)/tpool.o \
+	$(OBJ_DIR)/defs.o \
+	$(OBJ_DIR)/gpu_kernels.o
 
 all: tes
-# 	mogrify -format png *.ppm
 
-tes: main.o fast_tesselation.o tpool.o defs.o
-	gcc $(buildopts) -o tes $^
+tes: $(OBJ_DIR) $(OBJS)
+	$(NVCC) $(OBJS) -o $@ $(LDLIBS)
 
-%.o: %.c
-	gcc $(buildopts) -c $<
+# Ensure build directory exists
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+
+# C sources → build/
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# CUDA sources → build/
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu | $(OBJ_DIR)
+	$(NVCC) $(NVFLAGS) -c $< -o $@
 
 clean:
-	rm -f tes run *.o *.ppm *.png *.gif *.txt
+	rm -rf $(OBJ_DIR)/*
