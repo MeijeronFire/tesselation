@@ -22,6 +22,10 @@ void append(s_chunk *workingChunk, sites *item)
 {
 	size_t arrSizeOld = (*workingChunk).sitesHeld;
 
+	if (arrSizeOld > 0) {
+		printf("duly noted.\n");
+	}
+
 	// reallocate the array to the size of itself
 	(*workingChunk).siteArr = reallocarray((*workingChunk).siteArr, (arrSizeOld + 1), sizeof(s_chunk *));
 	if ((*workingChunk).siteArr == NULL) {
@@ -76,23 +80,26 @@ void initialiseSites(void)
 		mutableInternal[i].r = tR;
 		mutableInternal[i].g = tG;
 		mutableInternal[i].b = tB;
-		printf("[[%d, %d], [%d, %d, %d]],\n", mutableInternal[i].x, mutableInternal[i].y, (int) mutableInternal[i].r, (int) mutableInternal[i].g, (int) mutableInternal[i].b);
+		// printf("[[%d, %d], [%d, %d, %d]],\n", mutableInternal[i].x, mutableInternal[i].y, (int) mutableInternal[i].r, (int) mutableInternal[i].g, (int) mutableInternal[i].b);
 
 		// j is for Y, k is for X
 		for (int j = -1; j <= 1; j++) {
 			// if the current Y falls outside of chunk boundaries (< 0, > max), skip
 			cY = (tY / CHUNK_DIM) + j;
 			if (cY < 0 || cY >= CHUNK_HEIGHT)
-				continue;
+				goto j_end;
 
 			for (int k = -1; k <= 1; k++) {
 				// if the current X falls outside of chunk boundaries (< 0, > max), skip
 				cX = (tX / CHUNK_DIM) + k;
-				if (cX < 0 || cX >= CHUNK_HEIGHT)
-					continue;
+				if (cX < 0 || cX >= CHUNK_WIDTH)
+					goto k_end;
 
+				// printf("I AM GOING TO ADD %p\n", &mutableInternal[i]);
 				append(&chunkedSitesTmp[(cY * CHUNK_WIDTH) + cX], &mutableInternal[i]);
+k_end:
 			}
+j_end:
 		}
 	}
 	completeSites = mutableInternal;
@@ -127,14 +134,22 @@ sites *closest(int x, int y, float p)
 {
 	int cX = x / CHUNK_DIM;
 	int cY = y / CHUNK_DIM;
-	sites *siteOpts = *(sChunkedSites[y * CHUNK_DIM + x].siteArr);
-	int sitesInChunk = sChunkedSites[y * CHUNK_DIM + x].sitesHeld;
+	int sitesInChunk = sChunkedSites[cY * CHUNK_WIDTH + cX].sitesHeld;
 
 	if (sitesInChunk == 0) {
-		static zeroSite = {0, 0, 0, 0, 0};
+		static sites zeroSite;
 
-		return zeroSite;
+		zeroSite.x = 0;
+		zeroSite.y = 0;
+		zeroSite.r = 0;
+		zeroSite.g = 0;
+		zeroSite.b = 0;
+
+		return &zeroSite;
 	}
+
+	// now that we now this adress is populated:
+	sites *siteOpts = *(sChunkedSites[cY * CHUNK_WIDTH + cX].siteArr);
 
 	int d;
 	int closestIndex = 0;
@@ -168,6 +183,7 @@ void worker(void *arg)
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
 			closestSite = closest(i, j, (*val).power);
+			// printf("%p\n", closestSite);
 			imageRam.bytemap[i*WIDTH*3 + j*3 + 0] = closestSite->r;
 			imageRam.bytemap[i*WIDTH*3 + j*3 + 1] = closestSite->g;
 			imageRam.bytemap[i*WIDTH*3 + j*3 + 2] = closestSite->b;

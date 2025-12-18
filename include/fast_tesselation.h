@@ -34,7 +34,7 @@ struct schunk_struct {
 	int sitesHeld;
 };
 
-int closest(int x, int y, float p);
+sites *closest(int x, int y, float p);
 void initialiseSites(void);
 void worker(void *arg);
 void cleansites(void);

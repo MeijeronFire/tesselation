@@ -22,7 +22,7 @@ int main(void)
 			vals[i].power = 1.0 + i * (1.0 / (num_items - 1));
 		else
 			vals[0].power = 2;
-		printf("%d, %.6f\n", vals[i].name, vals[i].power);
+		// printf("%d, %.6f\n", vals[i].name, vals[i].power);
 		tpool_add_work(tm, worker, vals+i);
 	}
 
