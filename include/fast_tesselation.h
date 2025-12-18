@@ -1,19 +1,22 @@
 /* SPDX-License-Identifier: GPL */
+#ifndef __TESSELATION_H__
+#define __TESSELATION_H__
 #include "defs.h"
 
 struct image_struct {
 	unsigned int width, height;
 	unsigned char *bytemap;
 };
-struct sites_struct {
+struct site_struct {
 	int x, y;
 	unsigned char r, g, b; // color value at char
 };
 
 typedef struct image_struct image;
-typedef struct sites_struct sites;
+typedef struct site_struct sites;
 
 int closest(int x, int y, float p);
-const sites *getSites(void);
+void initialiseSites(void);
 void worker(void *arg);
 
+#endif

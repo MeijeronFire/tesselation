@@ -11,17 +11,12 @@
 static pthread_once_t once = PTHREAD_ONCE_INIT;
 static sites *externalSites;
 
-struct argument {
-	float power;
-	int name;
-};
-
 int randMax(int max)
 {
 	return rand() % (max + 1);
 }
 
-sites *initialiseSites(void)
+void initialiseSites(void)
 {
 	// initilise the random function
 	srand(time(NULL));
@@ -37,18 +32,7 @@ sites *initialiseSites(void)
 		mutableInternal[i].g = COLORS[colorChoice][1];
 		mutableInternal[i].b = COLORS[colorChoice][2];
 	}
-	return mutableInternal;
-}
-
-void init_wrapper(void)
-{
-	externalSites = initialiseSites();
-}
-
-const sites *getSites(void)
-{
-	pthread_once(&once, init_wrapper);
-	return externalSites;
+	externalSites = mutableInternal;
 }
 
 void freeSites(void)
@@ -66,7 +50,7 @@ double distance(int x1, int x2, int y1, int y2, float p)
 
 int closest(int x, int y, float p)
 {
-	sites *siteOpts = getSites();
+	sites *siteOpts = externalSites;
 	int d;
 	int closestIndex = 0;
 
@@ -87,10 +71,10 @@ void worker(void *arg)
 {
 	struct argument *val = arg;
 	image imageRam;
-	sites *Sites;
+	sites *Sites = externalSites;
 	int closestSite;
 
-	Sites = getSites();
+	// Sites = getSites();
 	imageRam.bytemap = malloc(WIDTH*HEIGHT*3*sizeof(unsigned char));
 
 	if (!imageRam.bytemap)
@@ -106,7 +90,7 @@ void worker(void *arg)
 	}
 	char fileName[20];
 
-	sprintf(fileName, "test%d.ppm", (*val).name);
+	sprintf(fileName, "out/test%d.ppm", (*val).name);
 
 	FILE *f = fopen(fileName, "wb");
 

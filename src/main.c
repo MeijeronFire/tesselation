@@ -9,13 +9,10 @@
 int main(void)
 {
 	tpool *tm;
-	struct argument {
-		float power;
-		int name;
-	} *vals;
+	struct argument *vals;
 	size_t   i;
 
-	// getSites(); // ignore output, just make threadsafe
+	initialiseSites(); // ignore output, just make threadsafe
 	tm   = tpool_create(num_threads);
 	vals = calloc(num_items, sizeof(*vals));
 

@@ -8,7 +8,7 @@ OBJ_DIR = build
 CFLAGS  = -O3 -Wall -Wextra -I$(INC_DIR)
 NVFLAGS = -O3 -I$(INC_DIR)
 
-LDLIBS  = -lpthread -pthread -lm
+LDLIBS  = -Wpedantic -lpthread -pthread -lm
 
 OBJS = \
 	$(OBJ_DIR)/main.o \
