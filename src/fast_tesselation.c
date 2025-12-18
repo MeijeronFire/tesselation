@@ -8,8 +8,8 @@
 #include "fast_tesselation.h"
 #include "defs.h"
 
-static pthread_once_t once = PTHREAD_ONCE_INIT;
-static sites *externalSites;
+static sites *completeSites;
+static s_chunk *sChunkedSites; // special chunks, formed by 3x3 chunks
 
 int randMax(int max)
 {
@@ -22,22 +22,54 @@ void initialiseSites(void)
 	srand(time(NULL));
 
 	static sites mutableInternal[SITEAMOUNT];
+	static s_chunk chunkedSitesTmp[CHUNK_AMOUNT];
 	int colorChoice;
+	int tX, tY; // x and y of the generated point
+	int pX, pY; // x and y where it gets placed in the array
+	char tR, tG, tB; // RGB coordinates of point
+
+	for (int i = 0; i < CHUNK_AMOUNT; i++) // clear any garbage pointers present
+		chunkedSitesTmp[i].siteArr = NULL;
 
 	for (int i = 0; i < SITEAMOUNT; i++) {
+		tX = randMax(WIDTH);
+		tY = randMax(HEIGHT);
+
 		colorChoice = randMax(COLORAMOUNT);
-		mutableInternal[i].x = randMax(WIDTH);
-		mutableInternal[i].y = randMax(HEIGHT);
-		mutableInternal[i].r = COLORS[colorChoice][0];
-		mutableInternal[i].g = COLORS[colorChoice][1];
-		mutableInternal[i].b = COLORS[colorChoice][2];
+		tR = COLORS[colorChoice][0];
+		tG = COLORS[colorChoice][1];
+		tB = COLORS[colorChoice][2];
+
+		mutableInternal[i].x = tX;
+		mutableInternal[i].y = tY;
+		mutableInternal[i].r = tR;
+		mutableInternal[i].g = tG;
+		mutableInternal[i].b = tB;
+		// printf("[[%d, %d], [%d, %d, %d]],\n", mutableInternal[i].x, mutableInternal[i].y, (int) mutableInternal[i].r, (int) mutableInternal[i].g, (int) mutableInternal[i].b);
+
+		for (int j = 0; j < 3; j++) {
+			for (int k = 0; k < 3; j++) {
+				// something here
+				// some more here
+				pX = ;
+				pY = ;
+				chunkedSitesTmp[pY * pX + pX].siteArr = NULL;
+			}
+		}
 	}
-	externalSites = mutableInternal;
+	completeSites = mutableInternal;
+
+	// now once the complete sites have been generated,
+	// we can divide these into chunks for faster lookup
+	// 1 dimensional of pointers to items in mutableInternal for faster lookup
+
+	sChunkedSites = chunkedSitesTmp;
 }
 
 void freeSites(void)
 {
-	free(externalSites);
+	free(completeSites);
+	free(sChunkedSites);
 }
 
 double distance(int x1, int x2, int y1, int y2, float p)
@@ -50,7 +82,7 @@ double distance(int x1, int x2, int y1, int y2, float p)
 
 int closest(int x, int y, float p)
 {
-	sites *siteOpts = externalSites;
+	sites *siteOpts = completeSites;
 	int d;
 	int closestIndex = 0;
 
@@ -71,7 +103,7 @@ void worker(void *arg)
 {
 	struct argument *val = arg;
 	image imageRam;
-	sites *Sites = externalSites;
+	sites *Sites = completeSites;
 	int closestSite;
 
 	// Sites = getSites();
@@ -106,6 +138,6 @@ void worker(void *arg)
 		fclose(f);
 	}
 
-	// freeSites();
+	freeSites();
 	free(imageRam.bytemap);
 }

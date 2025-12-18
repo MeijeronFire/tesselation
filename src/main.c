@@ -12,13 +12,16 @@ int main(void)
 	struct argument *vals;
 	size_t   i;
 
-	initialiseSites(); // ignore output, just make threadsafe
+	initialiseSites(); // ignore output, just to make threadsafe
 	tm   = tpool_create(num_threads);
 	vals = calloc(num_items, sizeof(*vals));
 
 	for (i = 0; i < num_items; i++) {
 		vals[i].name = i;
-		vals[i].power = 1.0 + i * (1.0 / (num_items - 1));
+		if (num_items != 1)
+			vals[i].power = 1.0 + i * (1.0 / (num_items - 1));
+		else
+			vals[0].power = 2;
 		printf("%d, %.6f\n", vals[i].name, vals[i].power);
 		tpool_add_work(tm, worker, vals+i);
 	}
