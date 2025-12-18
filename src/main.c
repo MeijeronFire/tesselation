@@ -30,5 +30,6 @@ int main(void)
 
 	free(vals);
 	tpool_destroy(tm);
+
 	return 0;
 }

@@ -16,6 +16,35 @@ int randMax(int max)
 	return rand() % (max + 1);
 }
 
+// grows the 'site array' in 's_chunk structs'
+// at given pointer by one and adds argument to it
+void append(s_chunk *workingChunk, sites *item)
+{
+	size_t arrSizeOld = (*workingChunk).sitesHeld;
+
+	// reallocate the array to the size of itself
+	(*workingChunk).siteArr = reallocarray((*workingChunk).siteArr, (arrSizeOld + 1), sizeof(s_chunk *));
+	if ((*workingChunk).siteArr == NULL) {
+		printf("Well, fuck. The adding of one element to the array complains for some reason");
+		printf("diagnose maybe idk\n");
+		exit(1);
+	}
+
+	// now also increment the arrSize
+	(*workingChunk).sitesHeld = arrSizeOld + 1;
+	// since it is 0 indexed, using the old size as index yields the last element
+	(*workingChunk).siteArr[arrSizeOld] = item;
+}
+
+void cleanSites(void)
+{
+	free(completeSites);
+	for (int i = 0; i < SITEAMOUNT; i++)
+		free((*sChunkedSites).siteArr);
+
+	free(sChunkedSites);
+}
+
 void initialiseSites(void)
 {
 	// initilise the random function
@@ -25,11 +54,13 @@ void initialiseSites(void)
 	static s_chunk chunkedSitesTmp[CHUNK_AMOUNT];
 	int colorChoice;
 	int tX, tY; // x and y of the generated point
-	int pX, pY; // x and y where it gets placed in the array
+	int cX, cY; // x and y in the chunk grid, so chunk coordinates
 	char tR, tG, tB; // RGB coordinates of point
 
-	for (int i = 0; i < CHUNK_AMOUNT; i++) // clear any garbage pointers present
+	for (int i = 0; i < CHUNK_AMOUNT; i++) { // clear any garbage pointers and values
 		chunkedSitesTmp[i].siteArr = NULL;
+		chunkedSitesTmp[i].sitesHeld = 0;
+	}
 
 	for (int i = 0; i < SITEAMOUNT; i++) {
 		tX = randMax(WIDTH);
@@ -45,31 +76,43 @@ void initialiseSites(void)
 		mutableInternal[i].r = tR;
 		mutableInternal[i].g = tG;
 		mutableInternal[i].b = tB;
-		// printf("[[%d, %d], [%d, %d, %d]],\n", mutableInternal[i].x, mutableInternal[i].y, (int) mutableInternal[i].r, (int) mutableInternal[i].g, (int) mutableInternal[i].b);
+		printf("[[%d, %d], [%d, %d, %d]],\n", mutableInternal[i].x, mutableInternal[i].y, (int) mutableInternal[i].r, (int) mutableInternal[i].g, (int) mutableInternal[i].b);
 
-		for (int j = 0; j < 3; j++) {
-			for (int k = 0; k < 3; j++) {
-				// something here
-				// some more here
-				pX = ;
-				pY = ;
-				chunkedSitesTmp[pY * pX + pX].siteArr = NULL;
+		// j is for Y, k is for X
+		for (int j = -1; j <= 1; j++) {
+			// if the current Y falls outside of chunk boundaries (< 0, > max), skip
+			cY = (tY / CHUNK_DIM) + j;
+			if (cY < 0 || cY >= CHUNK_HEIGHT)
+				continue;
+
+			for (int k = -1; k <= 1; k++) {
+				// if the current X falls outside of chunk boundaries (< 0, > max), skip
+				cX = (tX / CHUNK_DIM) + k;
+				if (cX < 0 || cX >= CHUNK_HEIGHT)
+					continue;
+
+				append(&chunkedSitesTmp[(cY * CHUNK_WIDTH) + cX], &mutableInternal[i]);
 			}
 		}
 	}
 	completeSites = mutableInternal;
-
-	// now once the complete sites have been generated,
-	// we can divide these into chunks for faster lookup
-	// 1 dimensional of pointers to items in mutableInternal for faster lookup
-
 	sChunkedSites = chunkedSitesTmp;
-}
 
-void freeSites(void)
-{
-	free(completeSites);
-	free(sChunkedSites);
+	/*
+	 *for (int i = 0; i < CHUNK_AMOUNT; i++) {
+	 *	printf("chunk at (%02d, %02d) with %d sites\n", i % CHUNK_WIDTH, i / CHUNK_HEIGHT, sChunkedSites[i].sitesHeld);
+	 *	for (int j = 0; j < sChunkedSites[i].sitesHeld; j++) {
+	 *		printf("item %2d: %3d - %3d (%3d, %3d, %3d)\n",
+	 *			j,
+	 *			(*(sChunkedSites[i].siteArr[j])).x,
+	 *			(*(sChunkedSites[i].siteArr[j])).y,
+	 *			(int) (*(sChunkedSites[i].siteArr[j])).r,
+	 *			(int) (*(sChunkedSites[i].siteArr[j])).g,
+	 *			(int) (*(sChunkedSites[i].siteArr[j])).b
+	 *		);
+	 *	}
+	 *}
+	 */
 }
 
 double distance(int x1, int x2, int y1, int y2, float p)
@@ -80,22 +123,32 @@ double distance(int x1, int x2, int y1, int y2, float p)
 	return pow(fabs(dx), p) + pow(fabs(dy), p);
 }
 
-int closest(int x, int y, float p)
+sites *closest(int x, int y, float p)
 {
-	sites *siteOpts = completeSites;
+	int cX = x / CHUNK_DIM;
+	int cY = y / CHUNK_DIM;
+	sites *siteOpts = *(sChunkedSites[y * CHUNK_DIM + x].siteArr);
+	int sitesInChunk = sChunkedSites[y * CHUNK_DIM + x].sitesHeld;
+
+	if (sitesInChunk == 0) {
+		static zeroSite = {0, 0, 0, 0, 0};
+
+		return zeroSite;
+	}
+
 	int d;
 	int closestIndex = 0;
 
 	double minD = distance(x, siteOpts[0].x, y, siteOpts[0].y, p);
 
-	for (int i = 1; i < SITEAMOUNT; i++) {
+	for (int i = 1; i < sitesInChunk; i++) {
 		d = distance(x, siteOpts[i].x, y, siteOpts[i].y, p);
 		if (d < minD) {
 			minD = d;
 			closestIndex = i;
 		}
 	}
-	return closestIndex;
+	return &siteOpts[closestIndex];
 }
 
 // alr for this function we just gotta go and generate one tesselation
@@ -103,8 +156,8 @@ void worker(void *arg)
 {
 	struct argument *val = arg;
 	image imageRam;
-	sites *Sites = completeSites;
-	int closestSite;
+	sites *Sites = completeSites; // array
+	sites *closestSite; // just pointer to single one
 
 	// Sites = getSites();
 	imageRam.bytemap = malloc(WIDTH*HEIGHT*3*sizeof(unsigned char));
@@ -115,9 +168,9 @@ void worker(void *arg)
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
 			closestSite = closest(i, j, (*val).power);
-			imageRam.bytemap[i*WIDTH*3 + j*3 + 0] = Sites[closestSite].r;
-			imageRam.bytemap[i*WIDTH*3 + j*3 + 1] = Sites[closestSite].g;
-			imageRam.bytemap[i*WIDTH*3 + j*3 + 2] = Sites[closestSite].b;
+			imageRam.bytemap[i*WIDTH*3 + j*3 + 0] = closestSite->r;
+			imageRam.bytemap[i*WIDTH*3 + j*3 + 1] = closestSite->g;
+			imageRam.bytemap[i*WIDTH*3 + j*3 + 2] = closestSite->b;
 		}
 	}
 	char fileName[20];
@@ -138,6 +191,5 @@ void worker(void *arg)
 		fclose(f);
 	}
 
-	freeSites();
 	free(imageRam.bytemap);
 }

@@ -16,6 +16,10 @@ OBJS = \
 	$(OBJ_DIR)/tpool.o \
 	$(OBJ_DIR)/defs.o \
 	$(OBJ_DIR)/gpu_kernels.o
+# all: compile
+# 	./run 50 1 500 500
+# 	mogrify -format png *.ppm
+buildopts = -g -O3 -Wall -Wextra -Wpedantic -lpthread -pthread -lm
 
 all: tes
 
