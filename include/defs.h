@@ -3,7 +3,7 @@
 #define __DEFS_H__
 
 #define num_threads 8
-#define num_items 6
+#define num_items 2
 
 #define CHUNK_DIM 100
 

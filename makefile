@@ -6,7 +6,7 @@ SRC_DIR = src
 INC_DIR = include
 OBJ_DIR = build
 
-CFLAGS  = -g -Wall -Wextra -Wpedantic -I$(INC_DIR)
+CFLAGS  = -Ofast -Wall -Wextra -Wpedantic -I$(INC_DIR)
 
 LDLIBS  = -lpthread -pthread -lm
 

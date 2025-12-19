@@ -22,10 +22,6 @@ void append(s_chunk *workingChunk, sites *item)
 {
 	size_t arrSizeOld = (*workingChunk).sitesHeld;
 
-	// if (arrSizeOld > 0) {
-	// 	printf("duly noted.\n");
-	// }
-
 	// reallocate the array to the size of itself
 	(*workingChunk).siteArr = realloc((*workingChunk).siteArr, (arrSizeOld + 1) * sizeof(item));
 	if ((*workingChunk).siteArr == NULL) {
@@ -82,7 +78,6 @@ void initialiseSites(void)
 		mutableInternal[i].r = tR;
 		mutableInternal[i].g = tG;
 		mutableInternal[i].b = tB;
-		// printf("[[%d, %d], [%d, %d, %d]],\n", mutableInternal[i].x, mutableInternal[i].y, (int) mutableInternal[i].r, (int) mutableInternal[i].g, (int) mutableInternal[i].b);
 
 		// j is for Y, k is for X
 		for (int j = -1; j <= 1; j++) {
@@ -106,8 +101,6 @@ j_end:
 	}
 	completeSites = mutableInternal;
 	sChunkedSites = chunkedSitesTmp;
-	// for (int i = 0; i < CHUNK_AMOUNT; i++)
-	// 	printf("%d,\n", sChunkedSites[i].sitesHeld);
 }
 
 double distance(int x1, int x2, int y1, int y2, float p)
@@ -170,7 +163,6 @@ void worker(void *arg)
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
 			closestSite = closest(j, i, (*val).power); // => 2
-			// printf("%p\n", closestSite);
 			imageRam.bytemap[i*WIDTH*3 + j*3 + 0] = closestSite->r;
 			imageRam.bytemap[i*WIDTH*3 + j*3 + 1] = closestSite->g;
 			imageRam.bytemap[i*WIDTH*3 + j*3 + 2] = closestSite->b;
