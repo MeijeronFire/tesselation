@@ -31,3 +31,4 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 
 clean:
 	rm -rf $(OBJ_DIR)/*
+	rm -rf out/*.ppm out/*.png

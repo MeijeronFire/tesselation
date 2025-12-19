@@ -22,12 +22,12 @@ void append(s_chunk *workingChunk, sites *item)
 {
 	size_t arrSizeOld = (*workingChunk).sitesHeld;
 
-	if (arrSizeOld > 0) {
-		printf("duly noted.\n");
-	}
+	// if (arrSizeOld > 0) {
+	// 	printf("duly noted.\n");
+	// }
 
 	// reallocate the array to the size of itself
-	(*workingChunk).siteArr = reallocarray((*workingChunk).siteArr, (arrSizeOld + 1), sizeof(s_chunk *));
+	(*workingChunk).siteArr = realloc((*workingChunk).siteArr, (arrSizeOld + 1) * sizeof(item));
 	if ((*workingChunk).siteArr == NULL) {
 		printf("Well, fuck. The adding of one element to the array complains for some reason");
 		printf("diagnose maybe idk\n");
@@ -38,6 +38,7 @@ void append(s_chunk *workingChunk, sites *item)
 	(*workingChunk).sitesHeld = arrSizeOld + 1;
 	// since it is 0 indexed, using the old size as index yields the last element
 	(*workingChunk).siteArr[arrSizeOld] = item;
+	// printf("%p\n", (*workingChunk).siteArr[arrSizeOld]);
 }
 
 void cleanSites(void)
@@ -52,7 +53,8 @@ void cleanSites(void)
 void initialiseSites(void)
 {
 	// initilise the random function
-	srand(time(NULL));
+	// srand(time(NULL));
+	srand(8008135);
 
 	static sites mutableInternal[SITEAMOUNT];
 	static s_chunk chunkedSitesTmp[CHUNK_AMOUNT];
@@ -104,22 +106,6 @@ j_end:
 	}
 	completeSites = mutableInternal;
 	sChunkedSites = chunkedSitesTmp;
-
-	/*
-	 *for (int i = 0; i < CHUNK_AMOUNT; i++) {
-	 *	printf("chunk at (%02d, %02d) with %d sites\n", i % CHUNK_WIDTH, i / CHUNK_HEIGHT, sChunkedSites[i].sitesHeld);
-	 *	for (int j = 0; j < sChunkedSites[i].sitesHeld; j++) {
-	 *		printf("item %2d: %3d - %3d (%3d, %3d, %3d)\n",
-	 *			j,
-	 *			(*(sChunkedSites[i].siteArr[j])).x,
-	 *			(*(sChunkedSites[i].siteArr[j])).y,
-	 *			(int) (*(sChunkedSites[i].siteArr[j])).r,
-	 *			(int) (*(sChunkedSites[i].siteArr[j])).g,
-	 *			(int) (*(sChunkedSites[i].siteArr[j])).b
-	 *		);
-	 *	}
-	 *}
-	 */
 }
 
 double distance(int x1, int x2, int y1, int y2, float p)
@@ -149,21 +135,21 @@ sites *closest(int x, int y, float p)
 	}
 
 	// now that we now this adress is populated:
-	sites *siteOpts = *(sChunkedSites[cY * CHUNK_WIDTH + cX].siteArr);
+	sites **siteOpts = sChunkedSites[cY * CHUNK_WIDTH + cX].siteArr;
 
-	int d;
+	double d;
 	int closestIndex = 0;
 
-	double minD = distance(x, siteOpts[0].x, y, siteOpts[0].y, p);
+	double minD = distance(x, siteOpts[0]->x, y, siteOpts[0]->y, p);
 
 	for (int i = 1; i < sitesInChunk; i++) {
-		d = distance(x, siteOpts[i].x, y, siteOpts[i].y, p);
+		d = distance(x, siteOpts[i]->x, y, siteOpts[i]->y, p);
 		if (d < minD) {
 			minD = d;
 			closestIndex = i;
 		}
 	}
-	return &siteOpts[closestIndex];
+	return siteOpts[closestIndex];
 }
 
 // alr for this function we just gotta go and generate one tesselation
@@ -171,7 +157,6 @@ void worker(void *arg)
 {
 	struct argument *val = arg;
 	image imageRam;
-	sites *Sites = completeSites; // array
 	sites *closestSite; // just pointer to single one
 
 	// Sites = getSites();
@@ -182,7 +167,7 @@ void worker(void *arg)
 
 	for (int i = 0; i < HEIGHT; i++) {
 		for (int j = 0; j < WIDTH; j++) {
-			closestSite = closest(i, j, (*val).power);
+			closestSite = closest(j, i, (*val).power); // => 2
 			// printf("%p\n", closestSite);
 			imageRam.bytemap[i*WIDTH*3 + j*3 + 0] = closestSite->r;
 			imageRam.bytemap[i*WIDTH*3 + j*3 + 1] = closestSite->g;
