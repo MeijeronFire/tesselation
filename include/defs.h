@@ -7,16 +7,16 @@
 
 #define CHUNK_DIM 100
 
-#define CHUNK_WIDTH 100
-#define CHUNK_HEIGHT 100
+#define CHUNK_WIDTH 50
+#define CHUNK_HEIGHT 50
 
 #define CHUNK_AMOUNT (CHUNK_WIDTH*CHUNK_HEIGHT)
 
 #define WIDTH (CHUNK_WIDTH * CHUNK_DIM)
 #define HEIGHT (CHUNK_HEIGHT * CHUNK_DIM)
 
-#define COLORAMOUNT 5
-#define SITEAMOUNT 10000
+#define COLORAMOUNT 6
+#define SITEAMOUNT (2*CHUNK_AMOUNT) // how about ~10 per chunk
 
 extern const unsigned char COLORS[COLORAMOUNT][3];
 
