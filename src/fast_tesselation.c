@@ -53,8 +53,8 @@ void cleanSites(void)
 void initialiseSites(void)
 {
 	// initilise the random function
-	// srand(time(NULL));
-	srand(8008135);
+	srand(time(NULL));
+	// srand(8008135);
 
 	static sites mutableInternal[SITEAMOUNT];
 	static s_chunk chunkedSitesTmp[CHUNK_AMOUNT];
@@ -106,6 +106,8 @@ j_end:
 	}
 	completeSites = mutableInternal;
 	sChunkedSites = chunkedSitesTmp;
+	// for (int i = 0; i < CHUNK_AMOUNT; i++)
+	// 	printf("%d,\n", sChunkedSites[i].sitesHeld);
 }
 
 double distance(int x1, int x2, int y1, int y2, float p)
