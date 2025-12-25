@@ -2,13 +2,13 @@
 #ifndef __DEFS_H__
 #define __DEFS_H__
 
-#define num_threads 8
-#define num_items 2
+#define num_threads 1
+#define num_items 1
 
 #define CHUNK_DIM 100
 
-#define CHUNK_WIDTH 50
-#define CHUNK_HEIGHT 50
+#define CHUNK_WIDTH 20
+#define CHUNK_HEIGHT 20
 
 #define CHUNK_AMOUNT (CHUNK_WIDTH*CHUNK_HEIGHT)
 
