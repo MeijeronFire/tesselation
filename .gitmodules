@@ -1,0 +1,3 @@
+[submodule "libs/statusbar"]
+	path = libs/statusbar
+	url = https://github.com/MeijeronFire/libbar.git
