@@ -44,12 +44,17 @@ $(info debug on: optimizing is still on default! Add -O0 to turn off optimisatio
 endif
 
 # PROJECT STRUCTURE SETTINGS
-SRC_DIR = src
-INC_DIR = include
-OBJ_DIR = build
+SRC_DIR	= src
+INC_DIR	= include
+OBJ_DIR	= build
+CFLAGS	+= -I$(INC_DIR)
 ifdef LIBS_INCLUDED # if we have a project with internal libraries
 LIB_DIR = libs
 endif
+
+# source files
+SRCS 	:= $(wildcard $(SRC_DIR)/*.c)
+OBJS	:= $(addprefix $(OBJ_DIR)/,$(notdir $(SRCS:.c=.o)))
 
 # compiling static libraries in project
 ifdef LIBS_INCLUDED
@@ -57,9 +62,8 @@ LIB_SRCS		:= $(wildcard libs/*/src/*.c) # the .c files in libs/...
 LIB_SRCS_NAMES	:= $(notdir $(LIB_SRCS)) # library source file base names
 LIB_OBJS		:= $(addprefix $(OBJ_DIR)/,$(LIB_SRCS_NAMES:.c=.o)) # the corresponding .o files in build/
 STATIC_LIBS		:= $(patsubst %.c,%.a,$(subst /src/,/,$(LIB_SRCS))) # DANGEROUS!!!
-$(info $(STATIC_LIBS))
-LIB_INCDS	:= $(wildcard $(LIB_DIR)/*/include) # list of all include dirs in libs folder
-CFLAGS		+= $(addprefix -I,$(LIB_INCDS)) # adds -I[includes] to CFLAGS
+LIB_INCDS		:= $(wildcard $(LIB_DIR)/*/include) # list of all include dirs in libs folder
+CFLAGS			+= $(addprefix -I,$(LIB_INCDS)) # adds -I[includes] to CFLAGS
 endif
 
 #				██████╗ ██╗   ██╗██╗     ███████╗███████╗
@@ -73,19 +77,24 @@ ifdef LIBS_INCLUDED
 all: $(STATIC_LIBS) $(TARGET)
 
 $(STATIC_LIBS): $(LIB_OBJS)
-	ar rcs $@ $^
+	ar rcs $@ $<
 
 $(LIB_OBJS): $(LIB_SRCS)
 	@mkdir -p build/
 	$(CC) $(CFLAGS) -c $< -o $@
-
 endif
 
 ifndef LIBS_INCLUDED
 all: $(TARGET)
 endif
 
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) $(LDLIBS) $^ $(STATIC_LIBS) -o $@
+
+build/%.o: src/%.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
 clean:
 	rm -rf build/
 clean_libs:
-	echo TODO
+	rm libs/
