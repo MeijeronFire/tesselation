@@ -1,34 +1,91 @@
+#
+#		███╗   ███╗ █████╗ ██╗  ██╗███████╗███████╗██╗██╗     ███████╗
+#		████╗ ████║██╔══██╗██║ ██╔╝██╔════╝██╔════╝██║██║     ██╔════╝
+#		██╔████╔██║███████║█████╔╝ █████╗  █████╗  ██║██║     █████╗  
+#		██║╚██╔╝██║██╔══██║██╔═██╗ ██╔══╝  ██╔══╝  ██║██║     ██╔══╝  
+#		██║ ╚═╝ ██║██║  ██║██║  ██╗███████╗██║     ██║███████╗███████╗
+#		╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝╚══════╝╚══════╝
+#
 # mogrify -format png *.ppm
 
-CC      = gcc
+# OUTPUT OF `$(cc) -v`:
+# 	Using built-in specs.
+# 	COLLECT_GCC=gcc
+# 	COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/lto-wrapper
+# 	Target: x86_64-pc-linux-gnu
+# 	Configured with: /build/gcc/src/gcc/configure \ 
+#		--enable-languages=ada,c,c++,d,fortran,go,lto,m2,objc,obj-c++,rust,cobol \
+#		--enable-bootstrap --prefix=/usr --libdir=/usr/lib --libexecdir=/usr/lib \
+#		--mandir=/usr/share/man --infodir=/usr/share/info \
+#		--with-bugurl=https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/issues \
+#		--with-build-config=bootstrap-lto --with-linker-hash-style=gnu --with-system-zlib \
+#		--enable-__cxa_atexit --enable-cet=auto --enable-checking=release --enable-clocale=gnu \
+#		--enable-default-pie --enable-default-ssp --enable-gnu-indirect-function \
+#		--enable-gnu-unique-object --enable-libstdcxx-backtrace --enable-link-serialization=1 \
+#		--enable-linker-build-id --enable-lto --enable-multilib --enable-plugin --enable-shared \
+#		--enable-threads=posix --disable-libssp --disable-libstdcxx-pch --disable-werror
+# 	Thread model: posix
+# 	Supported LTO compression algorithms: zlib zstd
+#	gcc version 15.2.1 20251112 (GCC) 
 
+.PHONY: clean all clean_libs # not real files: these are only rules
+
+# Output file!
+TARGET = tes # change later!
+
+# GLOBAL SETTINGS: compiler & compilerflags & compilerwarnings
+CC      	:= gcc
+CWARNINGS	:= -Wall -Wextra -Wpedantic # -Wconversion -Wsign-conversion # -Weverything
+CFLAGS  	:= -Ofast $(CWARNINGS)
+LDLIBS		= -lpthread -pthread -lm # libraries to link against
+ifdef DEBUG # if debugging
+CFLAGS += -g # NOTE: OPTIMIZING IS STILL ON!
+$(info debug on: optimizing is still on default! Add -O0 to turn off optimisation)
+endif
+
+# PROJECT STRUCTURE SETTINGS
 SRC_DIR = src
 INC_DIR = include
 OBJ_DIR = build
+ifdef LIBS_INCLUDED # if we have a project with internal libraries
+LIB_DIR = libs
+endif
 
-CFLAGS  = -Ofast -Wall -Wextra -Wpedantic -I$(INC_DIR)
+# compiling static libraries in project
+ifdef LIBS_INCLUDED
+LIB_SRCS		:= $(wildcard libs/*/src/*.c) # the .c files in libs/...
+LIB_SRCS_NAMES	:= $(notdir $(LIB_SRCS)) # library source file base names
+LIB_OBJS		:= $(addprefix $(OBJ_DIR)/,$(LIB_SRCS_NAMES:.c=.o)) # the corresponding .o files in build/
+STATIC_LIBS		:= $(patsubst %.c,%.a,$(subst /src/,/,$(LIB_SRCS))) # DANGEROUS!!!
+$(info $(STATIC_LIBS))
+LIB_INCDS	:= $(wildcard $(LIB_DIR)/*/include) # list of all include dirs in libs folder
+CFLAGS		+= $(addprefix -I,$(LIB_INCDS)) # adds -I[includes] to CFLAGS
+endif
 
-LDLIBS  = -lpthread -pthread -lm
+#				██████╗ ██╗   ██╗██╗     ███████╗███████╗
+#				██╔══██╗██║   ██║██║     ██╔════╝██╔════╝
+#				██████╔╝██║   ██║██║     █████╗  ███████╗
+#				██╔══██╗██║   ██║██║     ██╔══╝  ╚════██║
+#				██║  ██║╚██████╔╝███████╗███████╗███████║
+#				╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚══════╝╚══════╝
 
-OBJS = \
-	$(OBJ_DIR)/main.o \
-	$(OBJ_DIR)/fast_tesselation.o \
-	$(OBJ_DIR)/tpool.o \
-	$(OBJ_DIR)/defs.o \
+ifdef LIBS_INCLUDED
+all: $(STATIC_LIBS) $(TARGET)
 
-all: tes
+$(STATIC_LIBS): $(LIB_OBJS)
+	ar rcs $@ $^
 
-tes: $(OBJ_DIR) $(OBJS)
-	$(CC) $(OBJS) -o $@ $(LDLIBS)
-
-# Ensure build directory exists
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
-
-# C sources --> build/
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+$(LIB_OBJS): $(LIB_SRCS)
+	@mkdir -p build/
 	$(CC) $(CFLAGS) -c $< -o $@
 
+endif
+
+ifndef LIBS_INCLUDED
+all: $(TARGET)
+endif
+
 clean:
-	rm -rf $(OBJ_DIR)/*
-	rm -rf out/*.ppm out/*.png
+	rm -rf build/
+clean_libs:
+	echo TODO

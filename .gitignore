@@ -6,3 +6,4 @@ tes
 *.txt
 *.o
 .vscode
+*.a
