@@ -28,12 +28,34 @@
 # 	Supported LTO compression algorithms: zlib zstd
 #	gcc version 15.2.1 20251112 (GCC) 
 
-.PHONY: clean all clean_libs # not real files: these are only rules
 
-# Output file!
-TARGET = tes # change later!
+
+
+
+
+
+
+TARGET = tes 
+LIBS_INCLUDED = 1
+#convert:
+#	mogrify -format png out/*.ppm
+#
+
+
+
+
+
+
+#		███████╗███████╗████████╗████████╗██╗███╗   ██╗ ██████╗ ███████╗
+#		██╔════╝██╔════╝╚══██╔══╝╚══██╔══╝██║████╗  ██║██╔════╝ ██╔════╝
+#		███████╗█████╗     ██║      ██║   ██║██╔██╗ ██║██║  ███╗███████╗
+#		╚════██║██╔══╝     ██║      ██║   ██║██║╚██╗██║██║   ██║╚════██║
+#		███████║███████╗   ██║      ██║   ██║██║ ╚████║╚██████╔╝███████║
+#		╚══════╝╚══════╝   ╚═╝      ╚═╝   ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚══════╝                                                                
 
 # GLOBAL SETTINGS: compiler & compilerflags & compilerwarnings
+.PHONY: clean all clean_libs clean_all
+
 CC      	:= gcc
 CWARNINGS	:= -Wall -Wextra -Wpedantic # -Wconversion -Wsign-conversion # -Weverything
 CFLAGS  	:= -Ofast $(CWARNINGS)
@@ -47,10 +69,10 @@ endif
 SRC_DIR	= src
 INC_DIR	= include
 OBJ_DIR	= build
-CFLAGS	+= -I$(INC_DIR)
 ifdef LIBS_INCLUDED # if we have a project with internal libraries
 LIB_DIR = libs
 endif
+IFLAGS := -I$(INC_DIR) # include flags
 
 # source files
 SRCS 	:= $(wildcard $(SRC_DIR)/*.c)
@@ -61,9 +83,9 @@ ifdef LIBS_INCLUDED
 LIB_SRCS		:= $(wildcard libs/*/src/*.c) # the .c files in libs/...
 LIB_SRCS_NAMES	:= $(notdir $(LIB_SRCS)) # library source file base names
 LIB_OBJS		:= $(addprefix $(OBJ_DIR)/,$(LIB_SRCS_NAMES:.c=.o)) # the corresponding .o files in build/
-STATIC_LIBS		:= $(patsubst %.c,%.a,$(subst /src/,/,$(LIB_SRCS))) # DANGEROUS!!!
+STATIC_LIBS		:= $(patsubst %.c,%.a,$(subst /src/,/,$(LIB_SRCS))) # DANGEROUS!!!: target .a files
 LIB_INCDS		:= $(wildcard $(LIB_DIR)/*/include) # list of all include dirs in libs folder
-CFLAGS			+= $(addprefix -I,$(LIB_INCDS)) # adds -I[includes] to CFLAGS
+IFLAGS			+= $(addprefix -I,$(LIB_INCDS)) # adds -I[includes] to IFLAGS
 endif
 
 #				██████╗ ██╗   ██╗██╗     ███████╗███████╗
@@ -76,12 +98,8 @@ endif
 ifdef LIBS_INCLUDED
 all: $(STATIC_LIBS) $(TARGET)
 
-$(STATIC_LIBS): $(LIB_OBJS)
-	ar rcs $@ $<
-
-$(LIB_OBJS): $(LIB_SRCS)
-	@mkdir -p build/
-	$(CC) $(CFLAGS) -c $< -o $@
+$(STATIC_LIBS):
+	$(MAKE) -C $(dir $@) CFLAGS="$(CFLAGS)"
 endif
 
 ifndef LIBS_INCLUDED
@@ -89,12 +107,14 @@ all: $(TARGET)
 endif
 
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) $(LDLIBS) $^ $(STATIC_LIBS) -o $@
+	$(CC) $(CFLAGS) $^ -o $@ $(STATIC_LIBS) $(LDLIBS)
 
 build/%.o: src/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	@mkdir -p build/
+	$(CC) $(CFLAGS) $(IFLAGS) -c $< -o $@
 
 clean:
 	rm -rf build/
-clean_libs:
-	rm libs/
+clean_libs: clean
+	rm libs/*/*.a
+clean_all: clean clean_libs
