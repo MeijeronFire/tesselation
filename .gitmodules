@@ -1,3 +1,6 @@
 [submodule "libs/statusbar"]
 	path = libs/statusbar
 	url = https://github.com/MeijeronFire/libbar.git
+[submodule "libs/tpool"]
+	path = libs/tpool
+	url = https://github.com/MeijeronFire/threadpool.git
